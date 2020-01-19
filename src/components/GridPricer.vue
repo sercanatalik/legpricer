@@ -1,5 +1,4 @@
 <template>
-<div>
 <v-container class="fill-widht" fluid>
 
     <v-layout>
@@ -31,7 +30,7 @@
 
                 <v-menu offset-y open-on-hover dense>
                     <template v-slot:activator="{ on }">
-                        <v-btn x-small="" v-on="on">
+                        <v-btn x-small v-on="on">
                             <v-icon small>mdi-folder-open</v-icon>Load Trades
                         </v-btn>
                     </template>
@@ -50,24 +49,22 @@
 
                     </v-list>
                 </v-menu>
-                <v-icon x-small>mdi-blank</v-icon>
+
                 <v-btn x-small v-if="somthingClicked" dark color="#f6643c" @click.native="removeLeg(clickedId)">
                     <v-icon small>mdi-delete</v-icon> Delete Leg
                 </v-btn>
-                <v-icon x-small>mdi-blank</v-icon>
+                <!-- <v-icon x-small>mdi-blank</v-icon> -->
 
                 <v-btn x-small v-if="somthingClicked" dark color="#f6643c" @click.native="duplicateLeg(clickedId)">
                     <v-icon small>mdi-content-duplicate</v-icon> Duplicate Leg
                 </v-btn>
 
                 <v-spacer></v-spacer>
-                <v-text-field x-small v-if="search_trade" v-model="search" append-outer-icon="mdi-cloud-search" label="Trade Id" single-line hide-details color="red">
-
-                </v-text-field>
+                <v-text-field x-small v-if="search_cds" v-model="search" append-outer-icon="mdi-cloud-search" label="GC Trade Id" hide-details color="red" />
+                <v-text-field x-small v-if="search_irderiv" v-model="search" append-outer-icon="mdi-cloud-search" label="Summit Trade Id" hide-details color="red" />
 
                 <v-spacer></v-spacer>
 
-              
                 <v-btn x-small v-if="allLegs.length>=5" @click.native="deleteAllLegs()">
                     <v-icon small>mdi-delete-sweep</v-icon> Delete All
                 </v-btn>
@@ -109,47 +106,34 @@
         </v-flex>
     </v-layout>
 
+    <v-layout>
+        <v-flex>
+
+            <v-footer absolute class="font-weight-medium">
+                <div class="ma-0">
+                    <v-btn x-small class="ma-2" dark color="#FF7043" v-if="allLegs.length>=1" @click="priceAllLegs">
+
+                        <v-icon x-small> mdi-format-paragraph</v-icon> Price
+                    </v-btn>
+
+                    <v-btn x-small class="ma-2" dark color="#FF7043" v-if="allLegs.length>=1">
+                        <v-icon x-small> mdi-finance</v-icon> Risk
+                    </v-btn>
+
+                    <v-btn x-small class="ma-2" dark color="#FF7043" v-if="allLegs.length>=1">
+                        <v-icon x-small> mdi-refresh</v-icon> Refresh MD
+                    </v-btn>
+                </div>
+                <v-spacer></v-spacer>
+
+                <div class="overline"> {{ new Date().getFullYear() }} — <strong>Hybrids</strong>Trading </div>
+
+            </v-footer>
+
+        </v-flex>
+    </v-layout>
 
 </v-container>
-
-<template>
-
-    <v-footer
-      fixed
-    
-    >
-
-     <v-toolbar flat dense>
-
-                <v-btn small class="ma-2" color="warning" v-if="allLegs.length>=1">
-                    <v-icon small> mdi-format-paragraph</v-icon> Price
-                </v-btn>
-
-                
-                <v-btn small class="ma-2" dark v-if="allLegs.length>=1">
-                    <v-icon small> mdi-finance</v-icon> Risk 
-                </v-btn>
-
-                 <v-btn small class="ma-2"  v-if="allLegs.length>=1">
-                    <v-icon small> mdi-refresh</v-icon> Refresh MD 
-                </v-btn>
-
-
-                 <v-spacer></v-spacer>
-
-               
-                {{ new Date().getFullYear() }} — <strong>Hybrids</strong>
-
-            </v-toolbar>
-
-     
-        
-     
-    </v-footer>
-  
-</template>
-
-</div>
 </template>
 
 <script>
@@ -165,14 +149,28 @@ export default {
     name: 'GridPricer',
 
     data: () => ({
-        search_trade: false,
+        search_cds: false,
+        search_irderiv: false,
+
         trades: [{
-                header: 'Credit',
+                header: 'Global Calypso',
             },
             {
                 id: 'cds',
-                title: 'CDS Singlename '
+                title: 'CDS/CDS Basket '
             },
+            {
+                id: 'cln',
+                title: 'CLN '
+            },
+            {
+                header: 'Summit',
+            },
+            {
+                id: 'irs',
+                title: 'IR Derivatives '
+            },
+
         ],
         products: [{
                 header: 'Credit',
@@ -253,6 +251,9 @@ export default {
             return this.pricer_legs;
         }
     },
+    created: function () {
+
+    },
 
     methods: {
         saveClicked(value) {
@@ -271,8 +272,15 @@ export default {
         },
 
         load: function (product) {
-            this.search_trade = true
-            console.log(product)
+            if (product == 'cds') {
+                this.search_irderiv = false
+                this.search_cds = true
+
+            } else {
+                this.search_cds = false
+                this.search_irderiv = true
+            }
+            console.log(product,' loaded')
 
         },
 
@@ -306,6 +314,13 @@ export default {
 
             //   this.clickedId = null
         },
+        priceAllLegs: function () {
+            this.$store.commit('setMessage', 'Pricing ' + this.allLegs.length + ' Trades')
+            this.somthingClicked = false
+
+            //   this.clickedId = null
+        },
+
         ...mapMutations([
             // Mounts the "incrementStoredNumber" mutation to `this.incrementStoredNumber()`.
             'pricer_deleteLegs',

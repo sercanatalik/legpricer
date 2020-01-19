@@ -36,11 +36,15 @@ export default new Vuex.Store({
     pricer_deleteLeg(state, legId) {
       _.pullAt(state.pricer_legs, [legId]);
       state.pricer_legs = resetIndex(state.pricer_legs)
+    },
+    setMessage (state, msg) {
+      state.bottle = msg
     }
 
   },
   state: {
-    pricer_legs: []
+    pricer_legs: [],
+    bottle:'',
   },
   actions: {
 
